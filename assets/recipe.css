@@ -1,0 +1,11 @@
+.recipe-card { max-width: 800px; margin: 0 auto; }
+.recipe-card header { margin-bottom: 1rem; }
+.recipe-card .hero { width: 100%; height: auto; border-radius: 8px; }
+.recipe-card .meta { display: flex; flex-wrap: wrap; gap: .75rem; margin: .5rem 0 1rem; font-size: .95rem; color: #555; }
+.recipe-card h2 { margin-top: 1.25rem; }
+.print-btn { margin-top: .5rem; padding: .5rem .75rem; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 6px; }
+@media print {
+  header nav, footer, .site-footer, .site-header, .print-hide { display: none !important; }
+  .print-btn { display: none !important; }
+  body { color: #000; }
+}
