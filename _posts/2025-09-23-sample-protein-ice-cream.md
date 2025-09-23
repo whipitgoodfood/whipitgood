@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Chocolate Protein Ice Cream (Ninja Creami)"
-categories: frozen-treats
+categories: creami
 tags: [high-protein, ninja-creami, dessert, ice-cream]
 ---
 
