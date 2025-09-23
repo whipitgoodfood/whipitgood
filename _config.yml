@@ -6,3 +6,5 @@ permalink: /:categories/:title/
 plugins:
   - jekyll-feed
   - jekyll-sitemap
+header_pages:
+  - about.md
