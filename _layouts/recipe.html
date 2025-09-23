@@ -16,6 +16,7 @@ layout: default
       {% if page.cook_time %}<span><strong>Cook:</strong> {{ page.cook_time_human }}</span>{% endif %}
       {% if page.total_time %}<span><strong>Total:</strong> {{ page.total_time_human }}</span>{% endif %}
     </div>
+    {% include toc.html %}
     <button class="print-btn" onclick="window.print()">Print</button>
   </header>
 
