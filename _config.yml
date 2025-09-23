@@ -12,5 +12,11 @@ header_pages:
   - categories/protein-bakes.md
   - categories/creami.md
   - categories/seasonal.md
-url: "https://whipitgoodfood.github.io"
+
+url: "https://USERNAME.github.io"
 baseurl: "/whipitgood"
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
