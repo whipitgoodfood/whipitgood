@@ -62,14 +62,7 @@ layout: default
   <h2>Related recipes</h2>
   <div class="card-grid">
     {% for p in related %}
-      {% include recipe-card.html
-         url=p.url
-         image=p.image
-         image_alt=p.image_alt | default: p.title
-         title=p.title
-         subtitle=p.subtitle
-         protein=p.nutrition.protein
-         calories=p.nutrition.calories %}
+     {% include recipe-card.html url=p.url image=p.image image_alt=p.image_alt title=p.title subtitle=p.subtitle protein=p.nutrition.protein calories=p.nutrition.calories %}
     {% endfor %}
   </div>
 </section>
