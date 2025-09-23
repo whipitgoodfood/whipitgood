@@ -3,7 +3,7 @@ name: Generate recipe post
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: "0 14 * * 2,5"  # Tue and Fri at 14:00 UTC
+    - cron: "0 14 * * 2,5"  # Tue & Fri 14:00 UTC
 
 permissions:
   contents: write
@@ -16,9 +16,11 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
+          ref: main                # ensure we are on main
+          persist-credentials: true
           fetch-depth: 0
 
       - name: Set up Python
@@ -31,41 +33,47 @@ jobs:
           python -m pip install --upgrade pip
           pip install "openai>=1.30.0" Pillow
 
-      - name: Generate dummy post (test)
+      # ----- EITHER run the real generator -----
+      - name: Generate post
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           set -euxo pipefail
-          mkdir -p _posts
-          TODAY=$(date -u +%Y-%m-%d)
-          cat > _posts/${TODAY}-pipeline-test.md <<'EOF'
-          ---
-          layout: post
-          title: "Pipeline Test Post"
-          categories: site
-          ---
-          This confirms the workflow can create and commit a file.
-          EOF
+          python scripts/generate_recipe.py
 
+      # ----- OR uncomment this dummy test step for one run -----
+      # - name: Generate dummy post (test)
+      #   run: |
+      #     set -euxo pipefail
+      #     mkdir -p _posts
+      #     TODAY=$(date -u +%Y-%m-%d)
+      #     cat > _posts/${TODAY}-pipeline-test.md <<'EOF'
+      #     ---
+      #     layout: post
+      #     title: "Pipeline Test Post"
+      #     categories: site
+      #     ---
+      #     This confirms the workflow can create and commit a file.
+      #     EOF
 
-      - name: Show repo status
+      - name: Show repo status before commit
         run: |
-          git status
+          set -euxo pipefail
+          pwd
+          git branch --show-current
+          git status --porcelain
           ls -la
           ls -la _posts || true
           ls -la assets/images || true
-          echo "Changed files:"
+          echo "Changed files (unstaged):"
           git diff --name-only || true
 
-      - name: Commit and push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -e
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "chore: add auto-generated recipe"
-            git push
-          fi
+      # Use a robust auto-commit action to avoid git edge cases
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: add auto-generated recipe"
+          branch: main
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          add_options: "-A"
