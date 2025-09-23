@@ -31,12 +31,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install "openai>=1.30.0" Pillow
 
-      - name: Generate post
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Generate dummy post (test)
         run: |
           set -euxo pipefail
-          python scripts/generate_recipe.py
+          mkdir -p _posts
+          TODAY=$(date -u +%Y-%m-%d)
+          cat > _posts/${TODAY}-pipeline-test.md <<'EOF'
+          ---
+          layout: post
+          title: "Pipeline Test Post"
+          categories: site
+          ---
+          This confirms the workflow can create and commit a file.
+          EOF
+
 
       - name: Show repo status
         run: |
