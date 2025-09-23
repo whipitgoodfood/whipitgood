@@ -4,13 +4,13 @@ Offline-friendly recipe generator for GitHub Actions.
 
 - Creates a new Jekyll post under _posts/ with layout: recipe
 - Generates hero (1200x800), OG (1200x630), and Pin (1200x1800) images
-- If PEXELS_API_KEY is set (repo secret passed via workflow), downloads a
-  relevant free photo and derives images from it; otherwise makes branded cards
+- If PEXELS_API_KEY is set and Requests/Pillow are available, downloads a
+  relevant free photo from Pexels and derives images from it; otherwise
+  makes branded cards.
 - Avoids repeating titles by checking existing _posts slugs
 - Optionally extends text/recipe banks from _data/ideas.yml (PyYAML)
 
-Requirements installed by workflow:
-  Pillow, pyyaml, requests
+Workflow must install: Pillow pyyaml requests
 """
 
 import os
@@ -36,20 +36,20 @@ except Exception:
     REQ_OK = False
 
 # ------------------ Paths & Site ------------------
-POSTS_DIR   = Path("_posts")
+POSTS_DIR    = Path("_posts")
 IMG_HERO_DIR = Path("assets/images")  # on-page hero
 IMG_OG_DIR   = Path("assets/og")      # social OG/Twitter
 IMG_PIN_DIR  = Path("assets/pins")    # Pinterest tall
 IMG_SRC_DIR  = Path("assets/src")     # original downloads
 
-SITE_NAME   = "Whip It Good"
+SITE_NAME = "Whip It Good"
 
 # Colors
-TEXT        = (20, 20, 20)
-TEXT_SUB    = (60, 60, 60)
-BG_LIGHT    = (248, 248, 248)
-OG_BG       = (242, 246, 255)
-PIN_BG      = (255, 248, 242)
+TEXT     = (20, 20, 20)
+TEXT_SUB = (60, 60, 60)
+BG_LIGHT = (248, 248, 248)
+OG_BG    = (242, 246, 255)
+PIN_BG   = (255, 248, 242)
 
 # ------------------ Categories ------------------
 CATEGORIES = ["creami", "frozen-treats", "protein-bakes", "seasonal"]
@@ -58,7 +58,7 @@ SEARCH_HINTS = {
     "creami": "ice cream, gelato, soft serve",
     "frozen-treats": "popsicle, ice pop, frozen yogurt",
     "protein-bakes": "brownies, muffins, baked dessert",
-    "seasonal": "pumpkin spice, peppermint, seasonal dessert"
+    "seasonal": "pumpkin spice, peppermint, seasonal dessert",
 }
 
 # ------------------ Banks (can be extended by _data/ideas.yml) ------------------
@@ -287,13 +287,12 @@ def cover_resize(img: "Image.Image", target_w: int, target_h: int) -> "Image.Ima
     return img2.crop((left, top, left + target_w, top + target_h))
 
 def title_overlay(base: "Image.Image", title: str, subtitle: str | None):
+    """Draw simple text; keep it compatible with RGB to avoid alpha issues."""
     if not PIL_OK:
         return base
     d = ImageDraw.Draw(base)
     pad = 36
     y = pad
-    # simple translucent band for readability
-    d.rectangle([pad-10, pad-10, base.width - pad, y + 120], fill=(255, 255, 255, 180))
     d.text((pad, y), SITE_NAME, fill=TEXT)
     y += 48
     wrapped = textwrap.fill(title, width=28)
@@ -350,10 +349,10 @@ def make_images_from_src(src_path: Path, slug: str, title: str, subtitle: str):
         # Hero 1200x800
         h = cover_resize(img, 1200, 800)
         h.save(hero, "JPEG", quality=86, optimize=True)
-        # OG 1200x630 with overlay
+        # OG 1200x630 with text overlays
         o = cover_resize(img, 1200, 630)
         title_overlay(o, title, subtitle).save(og, "JPEG", quality=86, optimize=True)
-        # Pin 1200x1800 with overlay
+        # Pin 1200x1800 with text overlays
         p = cover_resize(img, 1200, 1800)
         title_overlay(p, title, subtitle).save(pin, "JPEG", quality=86, optimize=True)
     return hero, og, pin
@@ -453,14 +452,15 @@ def main():
     if got_remote and PIL_OK:
         hero_path, og_path, pin_path = make_images_from_src(src_path, slug, title, subtitle)
     else:
-        # fallback: branded cards with overlays
         hero_path = IMG_HERO_DIR / f"{slug}.jpg"
         og_path   = IMG_OG_DIR   / f"{slug}-og.jpg"
         pin_path  = IMG_PIN_DIR  / f"{slug}-pin.jpg"
         if PIL_OK:
-            for (w, h, bg, out) in [(1200, 800, BG_LIGHT, hero_path),
-                                    (1200, 630, OG_BG,   og_path),
-                                    (1200, 1800, PIN_BG, pin_path)]:
+            for (w, h, bg, out) in [
+                (1200, 800, BG_LIGHT, hero_path),
+                (1200, 630, OG_BG,   og_path),
+                (1200, 1800, PIN_BG, pin_path),
+            ]:
                 img = Image.new("RGB", (w, h), color=bg)
                 title_overlay(img, title, subtitle).save(out, "JPEG", quality=86, optimize=True)
 
@@ -501,4 +501,36 @@ def main():
         "cook_time": cook,
         "cook_time_human": cook_h,
         "total_time": total,
-        "
+        "total_time_human": total_h,
+        "recipe_yield": recipe_yield,
+        "ingredients": ingredients,
+        "instructions": steps,
+        "nutrition": {
+            "calories": calories,
+            "protein": protein,
+            "carbs": carbs,
+            "fat": fat,
+        },
+    }
+    if credit_name and credit_url:
+        front["credit_name"] = credit_name
+        front["credit_url"]  = credit_url
+        front["credit_provider"] = credit_provider
+
+    # Body sections
+    body = "Short, practical, and macro-friendly. Save this base and remix flavors next time.\n\n"
+    body += build_sections(cat, title)
+
+    yaml_front = yaml.safe_dump(front, sort_keys=False, allow_unicode=True)
+    with open(post_path, "w", encoding="utf-8") as f:
+        f.write(f"---\n{yaml_front}---\n{body}\n")
+
+    print(f"Created post: {post_path}")
+    print(f"Hero image:   {hero_path} ({'ok' if hero_path.exists() else 'missing'})")
+    print(f"OG image:     {og_path} ({'ok' if og_path.exists() else 'missing'})")
+    print(f"Pin image:    {pin_path} ({'ok' if pin_path.exists() else 'missing'})")
+    if got_remote:
+        print(f"Pexels credit: {credit_name} - {credit_url}")
+
+if __name__ == "__main__":
+    main()
