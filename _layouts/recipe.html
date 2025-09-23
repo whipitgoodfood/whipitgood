@@ -6,13 +6,19 @@ layout: default
   <header>
     <h1>{{ page.title }}</h1>
     {% if page.subtitle %}<p class="subtitle">{{ page.subtitle }}</p>{% endif %}
-    {% if page.image or page.hero_image %}
+    {% assign hero_src = page.hero_image | default: page.image %}
+    {% if hero_src %}
+      <link rel="preload" as="image" href="{{ hero_src | relative_url }}">
       <img class="hero"
-           src="{{ (page.hero_image | default: page.image) | relative_url }}"
-           alt="{{ page.image_alt | default: page.title }}">
-    {% if page.credit_name and page.credit_url %}
-      <p class="photo-credit">Photo: <a href="{{ page.credit_url }}" rel="nofollow">{{ page.credit_name }}</a>{% if page.credit_provider %} via {{ page.credit_provider }}{% endif %}</p>
-    {% endif %}
+           src="{{ hero_src | relative_url }}"
+           alt="{{ page.image_alt | default: page.title }}"
+           width="1200" height="800"
+           loading="eager" decoding="async" fetchpriority="high">
+      {% if page.credit_name and page.credit_url %}
+        <p class="photo-credit">
+          Photo: <a href="{{ page.credit_url }}" rel="nofollow noopener">{{ page.credit_name }}</a>{% if page.credit_provider %} via {{ page.credit_provider }}{% endif %}
+        </p>
+      {% endif %}
     {% endif %}
     {% if page.description %}<p class="description">{{ page.description }}</p>{% endif %}
     <div class="meta">
