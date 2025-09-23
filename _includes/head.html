@@ -1,0 +1,13 @@
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+
+  <!-- Favicon for project site -->
+  <link rel="icon" href="{{ '/favicon.ico' | relative_url }}" type="image/x-icon">
+
+  <!-- Minima stylesheet -->
+  <link rel="stylesheet" href="{{ '/assets/main.css' | relative_url }}">
+
+  {% seo %}
+</head>
