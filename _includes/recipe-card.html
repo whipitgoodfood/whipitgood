@@ -1,6 +1,7 @@
 <article class="recipe-card-mini">
   <a href="{{ include.url | relative_url }}" class="thumb">
-    <img src="{{ include.image | relative_url }}" alt="{{ include.image_alt | escape }}">
+    <img src="{{ include.image | relative_url }}"
+         alt="{{ include.image_alt | default: include.title | escape }}">
   </a>
   <div class="body">
     <h3><a href="{{ include.url | relative_url }}">{{ include.title }}</a></h3>
