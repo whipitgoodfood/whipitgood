@@ -1,4 +1,4 @@
-import os, re, random, textwrap
+import os, re, random, textwrap, json
 from datetime import datetime
 from pathlib import Path
 
@@ -9,21 +9,27 @@ try:
 except Exception:
     PIL_OK = False
 
+try:
+    import requests
+    REQ_OK = True
+except Exception:
+    REQ_OK = False
+
 # ------------- Settings -------------
 POSTS_DIR = Path("_posts")
 IMG_HERO_DIR = Path("assets/images")
 IMG_OG_DIR = Path("assets/og")
 IMG_PIN_DIR = Path("assets/pins")
+IMG_SRC_DIR = Path("assets/src")  # original downloads
 
 CATEGORIES = ["creami", "frozen-treats", "protein-bakes", "seasonal"]
 SITE_NAME = "Whip It Good"
-BRAND_COLOR = (20, 20, 20)     # text color
-BG_LIGHT = (248, 248, 248)     # hero bg
-OG_BG = (242, 246, 255)        # og bg
-PIN_BG = (255, 248, 242)       # pin bg
+TEXT = (20, 20, 20)
+BG_LIGHT = (248, 248, 248)
+OG_BG = (242, 246, 255)
+PIN_BG = (255, 248, 242)
 # ------------------------------------
 
-# Base banks (merged/extended by _data/ideas.yml if present)
 SPINTAX_SUBTITLES = [
     "Macro-friendly {treat} that actually tastes good",
     "Light, {creamy|fudgy|frosty} and protein-packed",
@@ -49,15 +55,6 @@ FLAVORS = {
             "1 scoop vanilla whey or casein",
             "1/2 tsp vanilla extract",
             "1–2 tsp allulose or preferred sweetener",
-            "Pinch of salt",
-        ]),
-        ("Strawberry Cheesecake Protein Ice Cream", [
-            "1 cup unsweetened almond milk",
-            "1/2 cup nonfat Greek yogurt",
-            "1 scoop vanilla whey or casein",
-            "1/3 cup diced strawberries",
-            "1 tbsp sugar-free cheesecake pudding mix",
-            "1–2 tsp allulose",
             "Pinch of salt",
         ]),
     ],
@@ -91,17 +88,6 @@ FLAVORS = {
             "1/4 tsp baking powder",
             "Pinch of salt",
         ]),
-        ("Blueberry Protein Muffins", [
-            "1 cup oat flour",
-            "1/2 cup vanilla whey/casein blend",
-            "1 tsp baking powder",
-            "1/4 cup allulose or sweetener",
-            "2 large eggs",
-            "3/4 cup nonfat Greek yogurt",
-            "1/2 cup blueberries",
-            "1 tsp vanilla extract",
-            "Pinch of salt",
-        ]),
     ],
     "seasonal": [
         ("Pumpkin Pie Protein Soft Serve", [
@@ -110,15 +96,6 @@ FLAVORS = {
             "1 scoop vanilla casein or blend",
             "1–2 tsp allulose",
             "1/2 tsp pumpkin pie spice",
-            "Pinch of salt",
-        ]),
-        ("Peppermint Mocha Protein Ice Cream", [
-            "1 cup unsweetened almond milk",
-            "1/2 cup nonfat Greek yogurt",
-            "1 scoop chocolate whey or casein",
-            "1 tsp instant espresso powder",
-            "1/8 tsp peppermint extract",
-            "1–2 tsp allulose",
             "Pinch of salt",
         ]),
     ],
@@ -167,13 +144,6 @@ TROUBLESHOOT = {
         ("Won’t release from molds", "Run the mold under warm water 10–15 seconds, then twist gently."),
         ("Too icy", "Blend longer to fully dissolve protein and sweetener; use allulose for softer bite."),
     ],
-    "protein-bakes": [
-        ("Dry texture", "Reduce bake time 2–3 minutes, add 1–2 tbsp yogurt, or use a whey/casein blend."),
-        ("Rubbery crumb", "Avoid over-mixing once wet ingredients are added; use cocoa/oat flour balance."),
-    ],
-    "seasonal": [
-        ("Muted spice flavor", "Increase spice 1/4 tsp at a time; salt amplifies sweetness and flavor."),
-    ],
 }
 
 def spin(s: str) -> str:
@@ -188,34 +158,8 @@ def slugify(s: str) -> str:
     return s[:70] or "recipe"
 
 def ensure_dirs():
-    for p in (POSTS_DIR, IMG_HERO_DIR, IMG_OG_DIR, IMG_PIN_DIR):
+    for p in (POSTS_DIR, IMG_HERO_DIR, IMG_OG_DIR, IMG_PIN_DIR, IMG_SRC_DIR):
         p.mkdir(parents=True, exist_ok=True)
-
-def load_ideas():
-    """Reads optional _data/ideas.yml to extend banks."""
-    ideas_path = Path("_data/ideas.yml")
-    if not ideas_path.exists():
-        return
-    data = yaml.safe_load(ideas_path.read_text(encoding="utf-8")) or {}
-    # Extend banks if provided
-    if "subtitles" in data:
-        SPINTAX_SUBTITLES.extend([str(x) for x in data["subtitles"]])
-    if "descriptions" in data:
-        SPINTAX_DESCS.extend([str(x) for x in data["descriptions"]])
-    if "tips" in data:
-        TIPS.extend([str(x) for x in data["tips"]])
-    if "faq" in data:
-        for q in data["faq"]:
-            if isinstance(q, dict) and "q" in q and "a" in q:
-                FAQ_BANK.append((str(q["q"]), str(q["a"])))
-    if "flavors" in data:
-        # flavors: { category_slug: [ [title, [ingredients...]], ... ] }
-        for cat, items in data["flavors"].items():
-            FLAVORS.setdefault(cat, [])
-            for pair in items:
-                if isinstance(pair, list) and len(pair) == 2:
-                    title, ing = pair
-                    FLAVORS[cat].append((str(title), [str(i) for i in ing]))
 
 def macro_estimate(cat: str):
     if cat == "creami":           return ("160 kcal", "25 g", "8 g", "3 g")
@@ -223,46 +167,97 @@ def macro_estimate(cat: str):
     if cat == "protein-bakes":    return ("150 kcal", "12 g", "16 g", "4 g")
     return ("160 kcal", "22 g", "14 g", "3 g")
 
-def draw_card(w, h, bg, title, sub, outfile):
-    if not PIL_OK: return
-    img = Image.new("RGB", (w, h), color=bg)
-    d = ImageDraw.Draw(img)
-    # Simple text blocks (default bitmap font). Keep padding big for readability.
-    y = 40
-    d.text((40, y), SITE_NAME, fill=BRAND_COLOR); y += 60
-    # wrap title to ~30 chars per line
-    def wrap_text(t, width=30):
-        return textwrap.fill(t, width=width)
-    d.text((40, y), wrap_text(title, 28), fill=BRAND_COLOR); y += 160
-    if sub:
-        d.text((40, y), wrap_text(sub, 34), fill=(60, 60, 60))
-    outfile.parent.mkdir(parents=True, exist_ok=True)
-    img.save(outfile, "JPEG", quality=86, optimize=True)
+# ---------- Image helpers ----------
+def cover_resize(img: Image.Image, target_w: int, target_h: int) -> Image.Image:
+    # Resize to fill target, cropping excess (like CSS object-fit: cover)
+    src_w, src_h = img.size
+    src_ratio = src_w / src_h
+    tgt_ratio = target_w / target_h
+    if src_ratio > tgt_ratio:
+        # source wider than target: height matches, crop width
+        new_h = target_h
+        new_w = int(new_h * src_ratio)
+    else:
+        new_w = target_w
+        new_h = int(new_w / src_ratio)
+    img2 = img.resize((new_w, new_h), Image.LANCZOS)
+    left = (new_w - target_w) // 2
+    top = (new_h - target_h) // 2
+    return img2.crop((left, top, left + target_w, top + target_h))
 
-def make_images(title, subtitle, slug):
-    # Hero (page) 1200x800, OG 1200x630, Pin 1200x1800
+def draw_card_bg(w, h, bg):
+    if not PIL_OK: return None
+    return Image.new("RGB", (w, h), color=bg)
+
+def title_overlay(base: Image.Image, title: str, subtitle: str | None):
+    if not PIL_OK: return base
+    d = ImageDraw.Draw(base)
+    # Simple text block
+    pad = 36
+    y = pad
+    d.rectangle([pad-10, pad-10, base.width - pad, y + 120], fill=(255,255,255,180))
+    d.text((pad, y), SITE_NAME, fill=TEXT); y += 48
+    wrapped = textwrap.fill(title, width=28)
+    d.text((pad, y), wrapped, fill=TEXT); y += 28 * (1 + wrapped.count("\n"))
+    if subtitle:
+        d.text((pad, y+8), textwrap.fill(subtitle, 32), fill=(60,60,60))
+    return base
+
+def pexels_search_and_download(query: str, dest_src_path: Path):
+    """Returns (True/False, credit_name, credit_url, provider)"""
+    if not (REQ_OK and os.getenv("PEXELS_API_KEY")):
+        return False, None, None, None
+    headers = {"Authorization": os.environ["PEXELS_API_KEY"]}
+    url = "https://api.pexels.com/v1/search"
+    # bias toward food/ice cream/popsicles
+    q = f"{query} food dessert ice cream popsicle smoothie yogurt"
+    params = {"query": q, "per_page": 1, "orientation": "landscape"}
+    r = requests.get(url, headers=headers, params=params, timeout=20)
+    if r.status_code != 200:
+        return False, None, None, None
+    data = r.json()
+    if not data.get("photos"):
+        return False, None, None, None
+    p = data["photos"][0]
+    src = p.get("src", {})
+    image_url = src.get("original") or src.get("large2x") or src.get("large")
+    if not image_url:
+        return False, None, None, None
+    img_bytes = requests.get(image_url, timeout=30).content
+    dest_src_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(dest_src_path, "wb") as f:
+        f.write(img_bytes)
+    credit_name = p.get("photographer")
+    credit_url = p.get("url")
+    return True, credit_name, credit_url, "Pexels"
+
+def make_images_from_src(src_path: Path, slug: str, title: str, subtitle: str):
     hero = IMG_HERO_DIR / f"{slug}.jpg"
     og = IMG_OG_DIR / f"{slug}-og.jpg"
     pin = IMG_PIN_DIR / f"{slug}-pin.jpg"
-    if PIL_OK:
-        draw_card(1200, 800, BG_LIGHT, title, subtitle, hero)
-        draw_card(1200, 630, OG_BG, title, subtitle, og)
-        draw_card(1200, 1800, PIN_BG, title, subtitle, pin)
+    if PIL_OK and src_path.exists():
+        img = Image.open(src_path).convert("RGB")
+        # Hero 1200x800
+        h = cover_resize(img, 1200, 800)
+        h.save(hero, "JPEG", quality=86, optimize=True)
+        # OG 1200x630 with subtle overlay
+        o = cover_resize(img, 1200, 630)
+        title_overlay(o, title, subtitle).save(og, "JPEG", quality=86, optimize=True)
+        # Pin 1200x1800 with overlay
+        p = cover_resize(img, 1200, 1800)
+        title_overlay(p, title, subtitle).save(pin, "JPEG", quality=86, optimize=True)
     return hero, og, pin
 
+# ---------- Content blocks ----------
 def build_sections(cat, title):
-    # Tips
     tips = random.sample(TIPS, k=min(3, len(TIPS)))
-    # Variations (simple templated ideas)
     variations = [
         "Swap whey for a whey/casein blend to improve texture.",
         "Use allulose for softer freeze; erythritol sets harder.",
         "Add 1–2 tbsp nonfat Greek yogurt for creaminess.",
         "Stir in mix-ins after the first spin (chips, berries, cookie crumbles).",
     ]
-    # Troubleshooting
     ts_list = TROUBLESHOOT.get(cat, [])
-    # FAQs (pick 2)
     faqs = random.sample(FAQ_BANK, k=min(2, len(FAQ_BANK)))
 
     md = []
@@ -288,16 +283,17 @@ def build_sections(cat, title):
     md.append("- Start here: {{ '/' | relative_url }}")
     return "\n".join(md)
 
+def spin_text(s: str, treat_word: str) -> str:
+    return spin(s).replace("{treat}", treat_word)
+
 def main():
     ensure_dirs()
-    load_ideas()
 
     cat = random.choice(CATEGORIES)
     title, ingredients = random.choice(FLAVORS[cat])
     treat_word = "treat" if cat != "protein-bakes" else "bake"
-    subtitle = spin(random.choice(SPINTAX_SUBTITLES)).replace("{treat}", treat_word)
-    description = spin(random.choice(SPINTAX_DESCS)).replace("{treat}", treat_word)
-
+    subtitle = spin_text(random.choice(SPINTAX_SUBTITLES), treat_word)
+    description = spin_text(random.choice(SPINTAX_DESCS), treat_word)
     steps = INSTRUCTIONS[cat]
     calories, protein, carbs, fat = macro_estimate(cat)
 
@@ -309,8 +305,28 @@ def main():
         post_path = POSTS_DIR / f"{today}-{slug}-{i}.md"
         i += 1
 
-    # Generate images
-    hero_path, og_path, pin_path = make_images(title, subtitle, slug)
+    # Try to fetch a real photo from Pexels
+    credit_name = credit_url = credit_provider = None
+    src_path = IMG_SRC_DIR / f"{slug}-src.jpg"
+    got_remote = False
+    if REQ_OK and os.getenv("PEXELS_API_KEY"):
+        q = re.sub(r"\bprotein\b", "", title, flags=re.I).strip()
+        ok, credit_name, credit_url, credit_provider = pexels_search_and_download(q, src_path)
+        got_remote = ok
+
+    # Build images from either the remote source or a branded filler
+    if got_remote and PIL_OK:
+        hero_path, og_path, pin_path = make_images_from_src(src_path, slug, title, subtitle)
+    else:
+        # fallback: branded cards
+        hero_path = IMG_HERO_DIR / f"{slug}.jpg"
+        og_path = IMG_OG_DIR / f"{slug}-og.jpg"
+        pin_path = IMG_PIN_DIR / f"{slug}-pin.jpg"
+        if PIL_OK:
+            for w, h, bg, out in [(1200,800,BG_LIGHT,hero_path),(1200,630,OG_BG,og_path),(1200,1800,PIN_BG,pin_path)]:
+                img = Image.new("RGB", (w,h), color=bg)
+                title_overlay(img, title, subtitle).save(out, "JPEG", quality=86, optimize=True)
+
     hero_rel = f"/{hero_path.as_posix()}"
     og_rel = f"/{og_path.as_posix()}"
     pin_rel = f"/{pin_path.as_posix()}"
@@ -335,9 +351,8 @@ def main():
         "title": title,
         "subtitle": subtitle,
         "description": description,
-        # IMPORTANT: page.image is the OG/social image; layout uses hero_image for on-page hero
-        "image": og_rel,
-        "hero_image": hero_rel,
+        "image": og_rel,       # social image (OG)
+        "hero_image": hero_rel, # on-page hero
         "pin_image": pin_rel,
         "pin_title": f"{title} | {SITE_NAME}",
         "pin_description": f"{description} (Protein: {protein}, Calories: {calories})",
@@ -361,10 +376,14 @@ def main():
         },
     }
 
+    if credit_name and credit_url:
+        front["credit_name"] = credit_name
+        front["credit_url"] = credit_url
+        front["credit_provider"] = credit_provider
+
     body = "Short, practical, and macro-friendly. Save this base and remix flavors next time.\n\n"
     body += build_sections(cat, title)
 
-    # Write the post with pretty YAML
     yaml_front = yaml.safe_dump(front, sort_keys=False, allow_unicode=True)
     with open(post_path, "w", encoding="utf-8") as f:
         f.write(f"---\n{yaml_front}---\n{body}\n")
@@ -373,6 +392,8 @@ def main():
     print(f"Hero image:   {hero_path} ({'ok' if hero_path.exists() else 'missing'})")
     print(f"OG image:     {og_path} ({'ok' if og_path.exists() else 'missing'})")
     print(f"Pin image:    {pin_path} ({'ok' if pin_path.exists() else 'missing'})")
+    if got_remote:
+        print(f"Pexels credit: {credit_name} - {credit_url}")
 
 if __name__ == "__main__":
     main()
