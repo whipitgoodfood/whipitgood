@@ -73,6 +73,47 @@ layout: default
 </section>
 {% endif %}
 
+{%- comment -%} Recipe structured data for SEO {%- endcomment -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Recipe",
+  "name": {{ page.title | jsonify }},
+  "description": {{ (page.description | default: page.subtitle | default: page.title) | jsonify }},
+  "image": [
+    {{ ((page.hero_image | default: page.image) | absolute_url) | jsonify }},
+    {{ (page.image | absolute_url) | jsonify }}{% if page.pin_image %},
+    {{ (page.pin_image | absolute_url) | jsonify }}{% endif %}
+  ],
+  "datePublished": "{{ page.date | date_to_xmlschema }}",
+  "author": { "@type": "Organization", "name": {{ site.title | jsonify }} },
+  "keywords": {{ page.tags | default: empty | jsonify }},
+  "recipeCategory": {{ page.categories | jsonify }},
+  "prepTime": {{ page.prep_time | jsonify }},
+  "cookTime": {{ page.cook_time | jsonify }},
+  "totalTime": {{ page.total_time | jsonify }},
+  "recipeYield": {{ page.recipe_yield | jsonify }},
+  "recipeIngredient": {{ page.ingredients | jsonify }},
+  "recipeInstructions": [
+    {%- for s in page.instructions -%}
+    { "@type": "HowToStep", "text": {{ s | strip | jsonify }} }{%- if forloop.last == false -%},{%- endif -%}
+    {%- endfor -%}
+  ],
+  "nutrition": {
+    "@type": "NutritionInformation",
+    "calories": {{ page.nutrition.calories | jsonify }},
+    "proteinContent": {{ page.nutrition.protein | jsonify }},
+    "carbohydrateContent": {{ page.nutrition.carbs | jsonify }},
+    "fatContent": {{ page.nutrition.fat | jsonify }}
+  }
+  {%- if page.credit_name and page.credit_url -%},
+  "imageCredit": {{ page.credit_name | jsonify }},
+  "imageCreditUrl": {{ page.credit_url | jsonify }}
+  {%- endif -%}
+}
+</script>
+
+  
 </article>
 
 {% comment %}
