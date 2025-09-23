@@ -1,0 +1,8 @@
+title: Whip It Good
+description: High-protein desserts and frozen treats made easy.
+theme: minima
+author: Ricky
+permalink: /:categories/:title/
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
