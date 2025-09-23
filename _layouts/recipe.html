@@ -10,6 +10,9 @@ layout: default
       <img class="hero"
            src="{{ (page.hero_image | default: page.image) | relative_url }}"
            alt="{{ page.image_alt | default: page.title }}">
+    {% if page.credit_name and page.credit_url %}
+      <p class="photo-credit">Photo: <a href="{{ page.credit_url }}" rel="nofollow">{{ page.credit_name }}</a>{% if page.credit_provider %} via {{ page.credit_provider }}{% endif %}</p>
+    {% endif %}
     {% endif %}
     {% if page.description %}<p class="description">{{ page.description }}</p>{% endif %}
     <div class="meta">
