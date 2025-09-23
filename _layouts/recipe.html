@@ -52,6 +52,28 @@ layout: default
     </ul>
   </section>
   {% endif %}
+  {% assign related = site.posts
+  | where_exp: 'p', 'p.categories contains page.categories'
+  | where_exp: 'p', 'p.url != page.url' | limit: 3 %}
+
+{% if related.size > 0 %}
+<section class="related">
+  <h2>Related recipes</h2>
+  <div class="card-grid">
+    {% for p in related %}
+      {% include recipe-card.html
+         url=p.url
+         image=p.image
+         image_alt=p.image_alt | default: p.title
+         title=p.title
+         subtitle=p.subtitle
+         protein=p.nutrition.protein
+         calories=p.nutrition.calories %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 </article>
 
 {% comment %}
