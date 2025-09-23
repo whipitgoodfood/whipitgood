@@ -3,7 +3,7 @@ name: Generate recipe post
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: "0 14 * * 2,5"  # Tue & Fri 14:00 UTC
+    - cron: "0 14 * * 2,5"  # Tue & Fri at 14:00 UTC
 
 permissions:
   contents: write
@@ -19,7 +19,7 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: main                # ensure we are on main
+          ref: main
           persist-credentials: true
           fetch-depth: 0
 
@@ -33,42 +33,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install Pillow pyyaml requests
 
-      # ----- EITHER run the real generator -----
       - name: Generate post
         env:
-          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}   # <-- add this
+          # Add this secret in: Settings → Secrets and variables → Actions
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
           set -euxo pipefail
           python scripts/generate_recipe.py
 
-      # ----- OR uncomment this dummy test step for one run -----
-      # - name: Generate dummy post (test)
-      #   run: |
-      #     set -euxo pipefail
-      #     mkdir -p _posts
-      #     TODAY=$(date -u +%Y-%m-%d)
-      #     cat > _posts/${TODAY}-pipeline-test.md <<'EOF'
-      #     ---
-      #     layout: post
-      #     title: "Pipeline Test Post"
-      #     categories: site
-      #     ---
-      #     This confirms the workflow can create and commit a file.
-      #     EOF
-
       - name: Show repo status before commit
         run: |
           set -euxo pipefail
-          pwd
+          echo "Current branch:"
           git branch --show-current
+          echo "Status:"
           git status --porcelain
+          echo "Tree:"
           ls -la
+          echo "_posts contents:"
           ls -la _posts || true
+          echo "Images:"
           ls -la assets/images || true
+          ls -la assets/og || true
+          ls -la assets/pins || true
           echo "Changed files (unstaged):"
           git diff --name-only || true
 
-      # Use a robust auto-commit action to avoid git edge cases
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
