@@ -1,0 +1,16 @@
+<article class="recipe-card-mini">
+  <a href="{{ include.url | relative_url }}" class="thumb">
+    <img src="{{ include.image | relative_url }}" alt="{{ include.image_alt | escape }}">
+  </a>
+  <div class="body">
+    <h3><a href="{{ include.url | relative_url }}">{{ include.title }}</a></h3>
+    {% if include.subtitle %}<p class="sub">{{ include.subtitle }}</p>{% endif %}
+    {% if include.protein or include.calories %}
+      <p class="macros">
+        {% if include.protein %}<strong>{{ include.protein }}</strong> protein{% endif %}
+        {% if include.protein and include.calories %} · {% endif %}
+        {% if include.calories %}{{ include.calories }}{% endif %}
+      </p>
+    {% endif %}
+  </div>
+</article>
