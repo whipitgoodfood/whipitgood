@@ -299,4 +299,80 @@ def main():
     description = spin(random.choice(SPINTAX_DESCS)).replace("{treat}", treat_word)
 
     steps = INSTRUCTIONS[cat]
-    calories,
+    calories, protein, carbs, fat = macro_estimate(cat)
+
+    slug = slugify(title)
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    post_path = POSTS_DIR / f"{today}-{slug}.md"
+    i = 2
+    while post_path.exists():
+        post_path = POSTS_DIR / f"{today}-{slug}-{i}.md"
+        i += 1
+
+    # Generate images
+    hero_path, og_path, pin_path = make_images(title, subtitle, slug)
+    hero_rel = f"/{hero_path.as_posix()}"
+    og_rel = f"/{og_path.as_posix()}"
+    pin_rel = f"/{pin_path.as_posix()}"
+
+    # Times / yield
+    if cat == "protein-bakes":
+        prep, cook, total = ("PT10M","PT15M","PT25M")
+        prep_h, cook_h, total_h = ("10 minutes","15 minutes","25 minutes")
+        recipe_yield = "9 squares"
+    elif cat == "frozen-treats":
+        prep, cook, total = ("PT5M","PT0M","PT5M")
+        prep_h, cook_h, total_h = ("5 minutes","0 minutes","5 minutes")
+        recipe_yield = "6 pops"
+    else:
+        prep, cook, total = ("PT5M","PT0M","PT5M")
+        prep_h, cook_h, total_h = ("5 minutes","0 minutes","5 minutes")
+        recipe_yield = "1 pint" if cat == "creami" else "2 servings"
+
+    # Front matter
+    front = {
+        "layout": "recipe",
+        "title": title,
+        "subtitle": subtitle,
+        "description": description,
+        # IMPORTANT: page.image is the OG/social image; layout uses hero_image for on-page hero
+        "image": og_rel,
+        "hero_image": hero_rel,
+        "pin_image": pin_rel,
+        "pin_title": f"{title} | {SITE_NAME}",
+        "pin_description": f"{description} (Protein: {protein}, Calories: {calories})",
+        "image_alt": title,
+        "categories": cat,
+        "tags": ["high-protein", "dessert", cat],
+        "prep_time": prep,
+        "prep_time_human": prep_h,
+        "cook_time": cook,
+        "cook_time_human": cook_h,
+        "total_time": total,
+        "total_time_human": total_h,
+        "recipe_yield": recipe_yield,
+        "ingredients": ingredients,
+        "instructions": steps,
+        "nutrition": {
+            "calories": calories,
+            "protein": protein,
+            "carbs": carbs,
+            "fat": fat,
+        },
+    }
+
+    body = "Short, practical, and macro-friendly. Save this base and remix flavors next time.\n\n"
+    body += build_sections(cat, title)
+
+    # Write the post with pretty YAML
+    yaml_front = yaml.safe_dump(front, sort_keys=False, allow_unicode=True)
+    with open(post_path, "w", encoding="utf-8") as f:
+        f.write(f"---\n{yaml_front}---\n{body}\n")
+
+    print(f"Created post: {post_path}")
+    print(f"Hero image:   {hero_path} ({'ok' if hero_path.exists() else 'missing'})")
+    print(f"OG image:     {og_path} ({'ok' if og_path.exists() else 'missing'})")
+    print(f"Pin image:    {pin_path} ({'ok' if pin_path.exists() else 'missing'})")
+
+if __name__ == "__main__":
+    main()
