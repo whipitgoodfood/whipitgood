@@ -6,8 +6,10 @@ layout: default
   <header>
     <h1>{{ page.title }}</h1>
     {% if page.subtitle %}<p class="subtitle">{{ page.subtitle }}</p>{% endif %}
-    {% if page.image %}
-      <img class="hero" src="{{ page.image | relative_url }}" alt="{{ page.image_alt | default: page.title }}">
+    {% if page.image or page.hero_image %}
+      <img class="hero"
+           src="{{ (page.hero_image | default: page.image) | relative_url }}"
+           alt="{{ page.image_alt | default: page.title }}">
     {% endif %}
     {% if page.description %}<p class="description">{{ page.description }}</p>{% endif %}
     <div class="meta">
