@@ -32,3 +32,5 @@ defaults:
       type: "pages"
     values:
       image: /assets/og-default.jpg
+
+google_analytics_id: "G-BTC2XJ4HV4"
