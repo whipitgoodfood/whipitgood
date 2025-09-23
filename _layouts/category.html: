@@ -1,0 +1,25 @@
+---
+layout: default
+---
+
+<section class="category-archive">
+  <h1>{{ page.title }}</h1>
+  <div class="card-grid">
+    {%- assign cat = page.category_slug -%}
+    {%- assign posts_in_cat = site.posts | where_exp: "p", "p.categories contains cat" -%}
+    {%- if posts_in_cat.size == 0 -%}
+      <p>No posts yet. Check back soon.</p>
+    {%- else -%}
+      {%- for p in posts_in_cat -%}
+        {% include recipe-card.html
+           url=p.url
+           image=(p.hero_image | default: p.image)
+           image_alt=(p.image_alt | default: p.title)
+           title=p.title
+           subtitle=p.subtitle
+           protein=p.nutrition.protein
+           calories=p.nutrition.calories %}
+      {%- endfor -%}
+    {%- endif -%}
+  </div>
+</section>
