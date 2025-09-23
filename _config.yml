@@ -1,36 +1,32 @@
 title: Whip It Good
-description: High-protein desserts and frozen treats made easy.
-theme: minima
-author: Ricky
-permalink: /:categories/:title/
-plugins:
-  - jekyll-feed
-  - jekyll-sitemap
-header_pages:
-  - about.md
-  - categories/frozen-treats.md
-  - categories/protein-bakes.md
-  - categories/creami.md
-  - categories/seasonal.md
+description: High-protein desserts, Ninja Creami recipes, and frozen treats.
+url: https://whipitgoodfood.github.io   # your public site root
+baseurl: /whipitgood                    # the repo/project path (keep the leading /)
 
-url: "https://USERNAME.github.io"
-baseurl: "/whipitgood"
+theme: minima
 
 plugins:
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-seo-tag
 
+permalink: /:categories/:title/
+paginate: 6
+paginate_path: "/page:num/"
+
+# Optional social (helps jekyll-seo-tag)
+twitter_username: ""
+github_username: "whipitgoodfood"
+
+# Defaults help SEO cards if a post ever misses image/alt
 defaults:
   - scope:
       path: ""
-      type: "posts"
+      type: posts
     values:
-      image: /assets/og-default.jpg
-  - scope:
-      path: ""
-      type: "pages"
-    values:
-      image: /assets/og-default.jpg
+      layout: recipe
+      image_alt: "Whip It Good recipe image"
 
-google_analytics_id: "G-BTC2XJ4HV4"
+# jekyll-feed config (so IFTTT/Pinterest can read your feed)
+feed:
+  path: feed.xml
