@@ -36,7 +36,7 @@ jobs:
       # ----- EITHER run the real generator -----
       - name: Generate post
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}   # <-- add this
         run: |
           set -euxo pipefail
           python scripts/generate_recipe.py
