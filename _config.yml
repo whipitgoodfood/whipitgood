@@ -20,3 +20,15 @@ plugins:
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-seo-tag
+
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      image: /assets/og-default.jpg
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      image: /assets/og-default.jpg
