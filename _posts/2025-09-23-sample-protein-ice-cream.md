@@ -5,7 +5,7 @@ categories: frozen-treats
 tags: [high-protein, ninja-creami, dessert, ice-cream]
 ---
 
-![Chocolate Protein Ice Cream](https://via.placeholder.com/800x600.png?text=Chocolate+Protein+Ice+Cream)
+![Chocolate Protein Ice Cream]({{ '/assets/images/choc-ice-cream.jpg' | relative_url }})
 
 ## Ingredients
 - 1 cup unsweetened almond milk  
