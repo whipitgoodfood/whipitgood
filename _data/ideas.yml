@@ -1,0 +1,26 @@
+# You can add/remove any of these sections.
+
+subtitles:
+  - "{Quick|No-fuss} {treat} with big flavor"
+  - "{Creamy|Fudgy|Frosty} texture, {high|serious} protein"
+
+descriptions:
+  - "A high-protein {treat} built for weeknights."
+  - "Dessert vibes with macro-friendly ingredients."
+
+tips:
+  - "Chill bowls/spoons to slow melting in summer."
+  - "For lactose issues, use lactose-free milk and isolate."
+
+faq:
+  - { q: "Can I swap almond milk for oat milk?", a: "Yes, but carbs and calories will increase slightly." }
+  - { q: "Best sweetener for baking?", a: "Allulose or a blend; erythritol can crystallize." }
+
+flavors:
+  creami:
+    - ["Cookies & Cream Protein Ice Cream",
+       ["1 cup unsweetened almond milk","1/2 cup nonfat Greek yogurt","1 scoop vanilla whey or casein","1 crumbled chocolate sandwich cookie","1–2 tsp allulose","Pinch of salt"]]
+  protein-bakes:
+    - ["Lemon Poppy Seed Protein Muffins",
+       ["1 cup oat flour","1/2 cup vanilla whey/casein blend","1 tsp baking powder","1/4 cup allulose",
+        "2 large eggs","3/4 cup nonfat Greek yogurt","1 tbsp lemon zest","1 tbsp poppy seeds","1 tsp vanilla","Pinch of salt"]]
