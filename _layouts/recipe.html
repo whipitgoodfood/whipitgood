@@ -1,0 +1,93 @@
+---
+layout: default
+---
+
+<article class="recipe-card">
+  <header>
+    <h1>{{ page.title }}</h1>
+    {% if page.subtitle %}<p class="subtitle">{{ page.subtitle }}</p>{% endif %}
+    {% if page.image %}
+      <img class="hero" src="{{ page.image | relative_url }}" alt="{{ page.image_alt | default: page.title }}">
+    {% endif %}
+    {% if page.description %}<p class="description">{{ page.description }}</p>{% endif %}
+    <div class="meta">
+      {% if page.recipe_yield %}<span><strong>Yield:</strong> {{ page.recipe_yield }}</span>{% endif %}
+      {% if page.prep_time %}<span><strong>Prep:</strong> {{ page.prep_time_human }}</span>{% endif %}
+      {% if page.cook_time %}<span><strong>Cook:</strong> {{ page.cook_time_human }}</span>{% endif %}
+      {% if page.total_time %}<span><strong>Total:</strong> {{ page.total_time_human }}</span>{% endif %}
+    </div>
+    <button class="print-btn" onclick="window.print()">Print</button>
+  </header>
+
+  {% if page.ingredients %}
+  <section>
+    <h2>Ingredients</h2>
+    <ul>
+      {% for item in page.ingredients %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if page.instructions %}
+  <section>
+    <h2>Instructions</h2>
+    <ol>
+      {% for step in page.instructions %}
+        <li>{{ step }}</li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% endif %}
+
+  {% if page.nutrition %}
+  <section class="nutrition">
+    <h2>Nutrition</h2>
+    <ul>
+      {% if page.nutrition.calories %}<li>Calories: {{ page.nutrition.calories }}</li>{% endif %}
+      {% if page.nutrition.protein %}<li>Protein: {{ page.nutrition.protein }}</li>{% endif %}
+      {% if page.nutrition.carbs %}<li>Carbs: {{ page.nutrition.carbs }}</li>{% endif %}
+      {% if page.nutrition.fat %}<li>Fat: {{ page.nutrition.fat }}</li>{% endif %}
+    </ul>
+  </section>
+  {% endif %}
+</article>
+
+{% comment %}
+Recipe JSON-LD for rich results
+Use ISO 8601 durations like PT10M, PT1H10M
+{% endcomment %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Recipe",
+  "name": {{ page.title | jsonify }},
+  "description": {{ page.description | jsonify }},
+  {% if page.image %}"image": [{{ page.image | relative_url | absolute_url | jsonify }}],{% endif %}
+  "author": {
+    "@type": "Person",
+    "name": {{ site.author | default: "Whip It Good" | jsonify }}
+  },
+  {% if page.date %}"datePublished": "{{ page.date | date_to_xmlschema }}",{% endif %}
+  {% if page.recipe_yield %}"recipeYield": {{ page.recipe_yield | jsonify }},{% endif %}
+  {% if page.prep_time %}"prepTime": "{{ page.prep_time }}",{% endif %}
+  {% if page.cook_time %}"cookTime": "{{ page.cook_time }}",{% endif %}
+  {% if page.total_time %}"totalTime": "{{ page.total_time }}",{% endif %}
+  {% if page.ingredients %}"recipeIngredient": {{ page.ingredients | jsonify }},{% endif %}
+  {% if page.instructions %}"recipeInstructions": [
+    {% for step in page.instructions %}
+      { "@type": "HowToStep", "text": {{ step | jsonify }} }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ],{% endif %}
+  {% if page.nutrition %}
+  "nutrition": {
+    "@type": "NutritionInformation"
+    {% if page.nutrition.calories %}, "calories": {{ page.nutrition.calories | jsonify }}{% endif %}
+    {% if page.nutrition.protein %}, "proteinContent": {{ page.nutrition.protein | jsonify }}{% endif %}
+    {% if page.nutrition.carbs %}, "carbohydrateContent": {{ page.nutrition.carbs | jsonify }}{% endif %}
+    {% if page.nutrition.fat %}, "fatContent": {{ page.nutrition.fat | jsonify }}{% endif %}
+  }
+  {% endif %}
+}
+</script>
