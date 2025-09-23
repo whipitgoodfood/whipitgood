@@ -8,5 +8,9 @@ plugins:
   - jekyll-sitemap
 header_pages:
   - about.md
+  - categories/frozen-treats.md
+  - categories/protein-bakes.md
+  - categories/creami.md
+  - categories/seasonal.md
 url: "https://whipitgoodfood.github.io"
 baseurl: "/whipitgood"
