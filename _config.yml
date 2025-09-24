@@ -2,6 +2,7 @@ title: Whip It Good
 description: High-protein desserts, Ninja Creami recipes, and frozen treats.
 url: https://whipitgoodfood.github.io   # your public site root
 baseurl: /whipitgood                    # the repo/project path (keep the leading /)
+google_analytics_id: G-BTC2XJ4HV4
 
 theme: minima
 
