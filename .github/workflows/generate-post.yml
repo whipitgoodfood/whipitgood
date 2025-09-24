@@ -1,9 +1,9 @@
 name: Generate recipe post
 
 on:
-  workflow_dispatch: {}
   schedule:
-    - cron: "0 14 * * 2,5"  # Tue & Fri at 14:00 UTC
+    - cron: "15 16 * * *"
+  workflow_dispatch: {}
 
 permissions:
   contents: write
