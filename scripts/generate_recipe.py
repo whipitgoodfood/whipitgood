@@ -546,6 +546,7 @@ def main():
         "image_alt": title,
         "categories": cat,
         "tags": ["high-protein", "dessert", cat],
+        "affiliates": build_affiliates(cat),
         "prep_time": prep,
         "prep_time_human": prep_h,
         "cook_time": cook,
