@@ -1,4 +1,35 @@
 ---
-layout: home
+layout: default
 title: Whip It Good
 ---
+
+<section class="home-hero">
+  <h1>High-Protein Desserts & Frozen Treats</h1>
+  <p>Macro-friendly recipes for Ninja Creami, pops, and easy bakes.</p>
+</section>
+
+<section class="latest">
+  <h2>Latest recipes</h2>
+  <div class="card-grid">
+    {% for p in site.posts limit:8 %}
+      {% include recipe-card.html
+         url=p.url
+         image=(p.hero_image | default: p.image)
+         image_alt=(p.image_alt | default: p.title)
+         title=p.title
+         subtitle=p.subtitle
+         protein=p.nutrition.protein
+         calories=p.nutrition.calories %}
+    {% endfor %}
+  </div>
+</section>
+
+<section class="by-cat">
+  <h2>Browse by category</h2>
+  <ul class="cat-links">
+    <li><a href="{{ '/category/creami/' | relative_url }}">Ninja Creami</a></li>
+    <li><a href="{{ '/category/frozen-treats/' | relative_url }}">Frozen Treats</a></li>
+    <li><a href="{{ '/category/protein-bakes/' | relative_url }}">Protein Bakes</a></li>
+    <li><a href="{{ '/category/seasonal/' | relative_url }}">Seasonal</a></li>
+  </ul>
+</section>
