@@ -10,6 +10,12 @@ plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
 
+header_pages:
+  - category/creami.md
+  - category/frozen-treats.md
+  - category/protein-bakes.md
+  - category/seasonal.md
+
 permalink: /:categories/:title/
 paginate: 6
 paginate_path: "/page:num/"
@@ -30,9 +36,3 @@ defaults:
 # jekyll-feed config (so IFTTT/Pinterest can read your feed)
 feed:
   path: feed.xml
-
-header_pages:
-  - category/creami.md
-  - category/frozen-treats.md
-  - category/protein-bakes.md
-  - category/seasonal.md
