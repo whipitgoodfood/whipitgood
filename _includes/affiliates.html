@@ -1,0 +1,11 @@
+{% if page.affiliates and page.affiliates.size > 0 %}
+<section class="affiliates">
+  <h2>Tools & ingredients I use</h2>
+  <ul>
+    {% for a in page.affiliates %}
+      <li><a href="{{ a.url }}" rel="sponsored nofollow noopener" target="_blank">{{ a.name }}</a>{% if a.note %} — {{ a.note }}{% endif %}</li>
+    {% endfor %}
+  </ul>
+  <p class="disclosure">As an Amazon Associate I earn from qualifying purchases.</p>
+</section>
+{% endif %}
