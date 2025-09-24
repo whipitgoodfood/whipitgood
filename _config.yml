@@ -30,3 +30,9 @@ defaults:
 # jekyll-feed config (so IFTTT/Pinterest can read your feed)
 feed:
   path: feed.xml
+
+header_pages:
+  - category/creami.md
+  - category/frozen-treats.md
+  - category/protein-bakes.md
+  - category/seasonal.md
