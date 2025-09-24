@@ -22,6 +22,56 @@ from pathlib import Path
 
 import yaml  # PyYAML
 
+AMAZON_TAG = os.getenv("AMAZON_TAG", "").strip() or None
+
+AFF_DEFAULT = {
+    "all": [
+        {"name": "Allulose Sweetener", "url": "https://www.amazon.com/s?k=allulose+sweetener", "note": "softer freeze"},
+        {"name": "Vanilla Whey Protein", "url": "https://www.amazon.com/s?k=vanilla+whey+protein"},
+    ],
+    "creami": [
+        {"name": "Ninja Creami", "url": "https://www.amazon.com/s?k=ninja+creami", "note": "my model"},
+        {"name": "Sugar-free Pudding Mix", "url": "https://www.amazon.com/s?k=sugar+free+pudding+mix"},
+    ],
+    "frozen-treats": [
+        {"name": "Popsicle Molds", "url": "https://www.amazon.com/s?k=popsicle+molds"},
+        {"name": "Greek Yogurt (nonfat)", "url": "https://www.amazon.com/s?k=nonfat+greek+yogurt"},
+    ],
+    "protein-bakes": [
+        {"name": "Casein/Whey Blend", "url": "https://www.amazon.com/s?k=casein+protein"},
+        {"name": "8x8 Baking Pan", "url": "https://www.amazon.com/s?k=8x8+baking+pan"},
+    ],
+    "seasonal": [
+        {"name": "Pumpkin Pie Spice", "url": "https://www.amazon.com/s?k=pumpkin+pie+spice"},
+        {"name": "Peppermint Extract", "url": "https://www.amazon.com/s?k=peppermint+extract"},
+    ],
+}
+
+def _add_amazon_tag(url: str) -> str:
+    if not AMAZON_TAG or "amazon." not in url:
+        return url
+    sep = "&" if "?" in url else "?"
+    return f"{url}{sep}tag={AMAZON_TAG}"
+
+def build_affiliates(cat: str) -> list[dict]:
+    base = AFF_DEFAULT.get("all", [])
+    cat_list = AFF_DEFAULT.get(cat, [])
+    items = base + cat_list
+    out = []
+    seen = set()
+    for a in items:
+        name = a.get("name", "").strip()
+        if not name or name.lower() in seen:
+            continue
+        url = _add_amazon_tag(a.get("url", "").strip())
+        entry = {"name": name, "url": url}
+        if a.get("note"):
+            entry["note"] = a["note"]
+        out.append(entry)
+        seen.add(name.lower())
+    return out[:6]
+
+
 # Optional libs
 try:
     from PIL import Image, ImageDraw
