@@ -2,6 +2,16 @@
 layout: default
 ---
 
+{% if site.google_analytics_id %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ site.google_analytics_id }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '{{ site.google_analytics_id }}');
+</script>
+{% endif %}
+
 <article class="recipe-card">
   <header>
     <h1>{{ page.title }}</h1>
