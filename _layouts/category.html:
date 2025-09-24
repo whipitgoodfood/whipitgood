@@ -11,10 +11,12 @@ layout: default
       <p>No posts yet. Check back soon.</p>
     {%- else -%}
       {%- for p in posts_in_cat -%}
+        {% assign card_image = p.hero_image | default: p.image %}
+        {% assign card_image_alt = p.image_alt | default: p.title %}
         {% include recipe-card.html
            url=p.url
-           image=(p.hero_image | default: p.image)
-           image_alt=(p.image_alt | default: p.title)
+           image=card_image
+           image_alt=card_image_alt
            title=p.title
            subtitle=p.subtitle
            protein=p.nutrition.protein
