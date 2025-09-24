@@ -18,3 +18,6 @@
 .card-grid { display:grid; gap:1rem; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); }
 .cat-links { list-style:none; padding:0; display:flex; gap:1rem; flex-wrap:wrap; }
 .cat-links a { text-decoration:underline; }
+.affiliates { border-top: 1px solid #eee; padding-top: 1rem; margin-top: 1.5rem; }
+.affiliates ul { margin: .5rem 0 0; padding-left: 1.2rem; }
+.disclosure { font-size:.85rem; color:#666; margin-top:.5rem; }
