@@ -117,10 +117,10 @@ layout: default
   "imageCreditUrl": {{ page.credit_url | jsonify }}
   {%- endif -%}
 }
-</script>
-
-  
+</script>  
 </article>
+
+{% include affiliates.html %}
 
 {%- comment -%} Precompute for JSON-LD {%- endcomment -%}
 {% assign recipe_desc = page.description | default: page.subtitle | default: page.title %}
