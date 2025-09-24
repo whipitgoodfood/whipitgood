@@ -122,40 +122,44 @@ layout: default
   
 </article>
 
-{% comment %}
-Recipe JSON-LD for rich results
-Use ISO 8601 durations like PT10M, PT1H10M
-{% endcomment %}
+{%- comment -%} Precompute for JSON-LD {%- endcomment -%}
+{% assign recipe_desc = page.description | default: page.subtitle | default: page.title %}
+{% assign img_primary = page.hero_image | default: page.image %}
+
+{%- comment -%} Recipe structured data {%- endcomment -%}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Recipe",
   "name": {{ page.title | jsonify }},
-  "description": {{ page.description | jsonify }},
-  {% if page.image %}"image": [{{ page.image | relative_url | absolute_url | jsonify }}],{% endif %}
-  "author": {
-    "@type": "Person",
-    "name": {{ site.author | default: "Whip It Good" | jsonify }}
-  },
-  {% if page.date %}"datePublished": "{{ page.date | date_to_xmlschema }}",{% endif %}
-  {% if page.recipe_yield %}"recipeYield": {{ page.recipe_yield | jsonify }},{% endif %}
-  {% if page.prep_time %}"prepTime": "{{ page.prep_time }}",{% endif %}
-  {% if page.cook_time %}"cookTime": "{{ page.cook_time }}",{% endif %}
-  {% if page.total_time %}"totalTime": "{{ page.total_time }}",{% endif %}
-  {% if page.ingredients %}"recipeIngredient": {{ page.ingredients | jsonify }},{% endif %}
-  {% if page.instructions %}"recipeInstructions": [
-    {% for step in page.instructions %}
-      { "@type": "HowToStep", "text": {{ step | jsonify }} }{% unless forloop.last %},{% endunless %}
-    {% endfor %}
-  ],{% endif %}
-  {% if page.nutrition %}
+  "description": {{ recipe_desc | jsonify }},
+  "image": [
+    {{ img_primary | absolute_url | jsonify }},
+    {{ page.image | absolute_url | jsonify }}{% if page.pin_image %},
+    {{ page.pin_image | absolute_url | jsonify }}{% endif %}
+  ],
+  "datePublished": "{{ page.date | date_to_xmlschema }}",
+  "author": { "@type": "Organization", "name": {{ site.title | jsonify }} },
+  "keywords": {{ page.tags | default: empty | jsonify }},
+  "recipeCategory": {{ page.categories | jsonify }},
+  "prepTime": {{ page.prep_time | jsonify }},
+  "cookTime": {{ page.cook_time | jsonify }},
+  "totalTime": {{ page.total_time | jsonify }},
+  "recipeYield": {{ page.recipe_yield | jsonify }},
+  "recipeIngredient": {{ page.ingredients | jsonify }},
+  "recipeInstructions": [
+    {%- for s in page.instructions -%}
+    { "@type": "HowToStep", "text": {{ s | strip | jsonify }} }{%- if forloop.last == false -%},{%- endif -%}
+    {%- endfor -%}
+  ],
   "nutrition": {
-    "@type": "NutritionInformation"
-    {% if page.nutrition.calories %}, "calories": {{ page.nutrition.calories | jsonify }}{% endif %}
-    {% if page.nutrition.protein %}, "proteinContent": {{ page.nutrition.protein | jsonify }}{% endif %}
-    {% if page.nutrition.carbs %}, "carbohydrateContent": {{ page.nutrition.carbs | jsonify }}{% endif %}
-    {% if page.nutrition.fat %}, "fatContent": {{ page.nutrition.fat | jsonify }}{% endif %}
-  }
-  {% endif %}
+    "@type": "NutritionInformation",
+    "calories": {{ page.nutrition.calories | jsonify }},
+    "proteinContent": {{ page.nutrition.protein | jsonify }},
+    "carbohydrateContent": {{ page.nutrition.carbs | jsonify }},
+    "fatContent": {{ page.nutrition.fat | jsonify }}
+  }{% if page.credit_name and page.credit_url %},
+  "imageCredit": {{ page.credit_name | jsonify }},
+  "imageCreditUrl": {{ page.credit_url | jsonify }}{% endif %}
 }
 </script>
