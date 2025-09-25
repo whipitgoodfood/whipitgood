@@ -18,7 +18,7 @@ layout: null
         <link>{{ post.url | absolute_url }}</link>
         <guid isPermaLink="true">{{ post.url | absolute_url }}</guid>
         <pubDate>{{ post.date | date_to_rfc822 }}</pubDate>
-        <description><![CDATA[{{ post.subtitle | default: post.description | default: post.title }}]]></description>
+        <description><![CDATA[{{ post.pin_description | default: post.subtitle | default: post.description | default: post.title }}]]></description>
         {% if hero %}
           <media:content url="{{ hero | absolute_url }}" medium="image" type="image/jpeg" />
           <enclosure url="{{ hero | absolute_url }}" length="0" type="image/jpeg" />
