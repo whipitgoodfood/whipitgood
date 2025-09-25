@@ -15,7 +15,7 @@ layout: null
       {% assign hero = post.hero_image | default: post.image %}
       <item>
         <title>{{ post.title | xml_escape }}</title>
-        <link>{{ post.url | absolute_url }}</link>
+        <link>{{ post.url | absolute_url }}?utm_source=pinterest&amp;utm_medium=social&amp;utm_campaign=auto_publish&amp;utm_content={{ post.title | slugify }}</link>
         <guid isPermaLink="true">{{ post.url | absolute_url }}</guid>
         <pubDate>{{ post.date | date_to_rfc822 }}</pubDate>
         <description><![CDATA[{{ post.pin_description | default: post.subtitle | default: post.description | default: post.title }}]]></description>
