@@ -20,7 +20,8 @@ layout: null
         <pubDate>{{ post.date | date_to_rfc822 }}</pubDate>
         <description><![CDATA[{{ post.subtitle | default: post.description | default: post.title }}]]></description>
         {% if hero %}
-        <media:content url="{{ hero | absolute_url }}" medium="image" type="image/jpeg" />
+          <media:content url="{{ hero | absolute_url }}" medium="image" type="image/jpeg" />
+          <enclosure url="{{ hero | absolute_url }}" length="0" type="image/jpeg" />
         {% endif %}
       </item>
     {% endfor %}
